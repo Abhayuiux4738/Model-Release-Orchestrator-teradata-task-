@@ -53,12 +53,12 @@ export const TerraPanel: React.FC<TerraPanelProps> = ({ messages }) => {
         aria-label="Chat history"
       >
         {messages.length === 0 && (
-          <div className="text-center mt-20 text-slate-400 text-sm flex flex-col items-center animate-fade-in">
+          <div className="text-center mt-20 text-slate-500 text-sm flex flex-col items-center animate-fade-in">
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 border border-slate-200 shadow-sm">
                <Brain className="opacity-50 text-slate-400" size={32} />
             </div>
-            <p className="font-medium text-slate-500">Waiting for session start...</p>
-            <p className="text-xs text-slate-400 mt-1">Terra is ready to assist you.</p>
+            <p className="font-medium text-slate-600">Waiting for session start...</p>
+            <p className="text-xs text-slate-500 mt-1">Terra is ready to assist you.</p>
           </div>
         )}
 
@@ -135,7 +135,7 @@ export const TerraPanel: React.FC<TerraPanelProps> = ({ messages }) => {
                       </div>
                     )}
                   </div>
-                  <span className={`text-[10px] text-slate-400 mt-1 block font-medium ${isUser ? 'text-right mr-1' : 'ml-1'}`}>
+                  <span className={`text-[10px] text-slate-500 mt-1 block font-medium ${isUser ? 'text-right mr-1' : 'ml-1'}`}>
                     {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </span>
                 </div>

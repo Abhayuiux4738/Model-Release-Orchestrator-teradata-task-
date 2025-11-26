@@ -4,7 +4,7 @@ import {
   Wifi, WifiOff, Check, X, ChevronRight, BarChart2, List, Shield, Info,
   Bot, ShieldAlert, Zap, Search, ArrowRight, GitBranch, Clock, BrainCircuit,
   LayoutDashboard, Terminal, LineChart, Cpu, Server, TrendingUp, Calendar, Layers,
-  Globe, Radio, Mic, Send, User as UserIcon
+  Globe, Radio, Mic, Send, User as UserIcon, HelpCircle, Share2
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer, Cell,
@@ -16,10 +16,53 @@ import { BASELINE_MODEL, CANDIDATE_MODEL, INITIAL_METRICS_STATE, ANOMALY_TICK_IN
 import { LiveChart } from './components/Charts';
 import { TerraPanel } from './components/TerraPanel';
 
+// --- Tour Types & Data ---
+interface TourStep {
+  targetId?: string;
+  title: string;
+  content: string;
+  position: 'top' | 'bottom' | 'left' | 'right' | 'center';
+  action?: () => void;
+}
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    title: "Welcome to MRO",
+    content: "This is the Model Release Orchestrator. I'll take you on a quick tour to show you how to safely deploy AI models using our agent-guided canary flow.",
+    position: 'center'
+  },
+  {
+    targetId: 'nav-overview',
+    title: "System Overview",
+    content: "We start here. The Overview dashboard monitors global system health, resource usage, and live traffic patterns across all clusters.",
+    position: 'bottom'
+  },
+  {
+    targetId: 'nav-release',
+    title: "Release Console",
+    content: "This is where the magic happens. Let's head over there to manage your deployment pipeline.",
+    position: 'bottom',
+    action: () => document.getElementById('nav-release')?.click()
+  },
+  {
+    targetId: 'card-model-comparison',
+    title: "Model Comparison",
+    content: "Review key performance metrics. Here you can see how your candidate model (v3.0) compares against the running baseline (v2.1).",
+    position: 'right'
+  },
+  {
+    targetId: 'btn-start-release',
+    title: "Initiate Deployment",
+    content: "When you're ready, click here to start the agent-guided release flow. Terra will run a shadow test before letting you proceed.",
+    position: 'top'
+  }
+];
+
 export default function App() {
   // --- State ---
+  // Start on Overview
   const [phase, setPhase] = useState<AppPhase>(AppPhase.IDLE);
-  const [activeTab, setActiveTab] = useState<'overview' | 'release' | 'monitoring' | 'logs' | 'settings'>('release');
+  const [activeTab, setActiveTab] = useState<'overview' | 'release' | 'monitoring' | 'logs' | 'settings'>('overview');
   const [metrics, setMetrics] = useState<MetricPoint[]>([]);
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -29,6 +72,11 @@ export default function App() {
   
   // Flow State
   const [shadowTestStatus, setShadowTestStatus] = useState<'idle' | 'running' | 'complete'>('idle');
+  
+  // Tour State
+  const [tourStepIndex, setTourStepIndex] = useState(0);
+  const [isTourActive, setIsTourActive] = useState(true);
+  const [tourRect, setTourRect] = useState<DOMRect | null>(null);
   
   // Persistent Settings
   const [networkEnabled, setNetworkEnabled] = useState(() => {
@@ -111,6 +159,32 @@ export default function App() {
       setCanaryPercent(defaultCanaryPercent);
     }
   }, [defaultCanaryPercent, phase]);
+
+  // Tour Effect: Update rect when step changes or window resizes
+  useEffect(() => {
+    if (!isTourActive) return;
+
+    const updateRect = () => {
+      const step = TOUR_STEPS[tourStepIndex];
+      if (step.targetId) {
+        const el = document.getElementById(step.targetId);
+        if (el) {
+          setTourRect(el.getBoundingClientRect());
+        }
+      } else {
+        setTourRect(null); // Center modal
+      }
+    };
+
+    // Small delay to allow UI to update (e.g. tab switch)
+    const timeout = setTimeout(updateRect, 100);
+    window.addEventListener('resize', updateRect);
+    
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener('resize', updateRect);
+    };
+  }, [tourStepIndex, isTourActive, activeTab]);
 
   // Live Dashboard Simulation Effect
   useEffect(() => {
@@ -209,6 +283,37 @@ export default function App() {
   }, [phase]);
 
   // --- Handlers ---
+
+  const handleShareComparison = () => {
+    alert("Comparison link copied to clipboard!");
+  };
+
+  const handleTourNext = () => {
+    const currentStep = TOUR_STEPS[tourStepIndex];
+    
+    // Execute action if exists (e.g. switch tab)
+    if (currentStep.action) {
+      currentStep.action();
+      // Need a small delay for render before next step calculation
+      setTimeout(() => {
+        if (tourStepIndex < TOUR_STEPS.length - 1) {
+          setTourStepIndex(prev => prev + 1);
+        } else {
+          setIsTourActive(false);
+        }
+      }, 150);
+    } else {
+      if (tourStepIndex < TOUR_STEPS.length - 1) {
+        setTourStepIndex(prev => prev + 1);
+      } else {
+        setIsTourActive(false);
+      }
+    }
+  };
+
+  const handleSkipTour = () => {
+    setIsTourActive(false);
+  };
 
   const handleChatSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -619,7 +724,7 @@ export default function App() {
             max="100"
             value={agentConfidence}
             onChange={(e) => setAgentConfidence(Number(e.target.value))}
-            className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <span className="font-mono font-bold text-slate-700 w-12 text-right">{agentConfidence}%</span>
         </div>
@@ -697,11 +802,96 @@ export default function App() {
     );
   };
 
+  // --- Tour Overlay Render ---
+  const renderTour = () => {
+    if (!isTourActive) return null;
+
+    const step = TOUR_STEPS[tourStepIndex];
+    const isModal = !step.targetId;
+
+    return (
+      <div className="fixed inset-0 z-[100] overflow-hidden pointer-events-none">
+        {/* Dim Background */}
+        <div className="absolute inset-0 bg-slate-900/60 transition-opacity duration-500 pointer-events-auto"></div>
+
+        {/* Spotlight Effect (if target exists) */}
+        {tourRect && (
+          <div 
+            className="absolute bg-transparent shadow-[0_0_0_9999px_rgba(15,23,42,0.6)] rounded-lg transition-all duration-300 ease-in-out pointer-events-none ring-2 ring-white/20"
+            style={{
+              top: tourRect.top - 8,
+              left: tourRect.left - 8,
+              width: tourRect.width + 16,
+              height: tourRect.height + 16,
+            }}
+          />
+        )}
+
+        {/* Tooltip Card */}
+        <div 
+          className={`absolute pointer-events-auto flex flex-col items-center justify-center transition-all duration-300 ${isModal ? 'inset-0' : ''}`}
+          style={!isModal && tourRect ? {
+            top: step.position === 'top' ? tourRect.top - 200 : 
+                 step.position === 'bottom' ? tourRect.bottom + 24 :
+                 tourRect.top + 24, // Fallback vertically
+            left: step.position === 'right' ? tourRect.right + 24 : 
+                  step.position === 'left' ? tourRect.left - 340 : 
+                  tourRect.left + (tourRect.width / 2) - 160,
+          } : {}}
+        >
+          <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full animate-scale-in border border-slate-100 relative">
+             {/* Progress Dots */}
+             <div className="flex justify-center space-x-1.5 mb-4">
+               {TOUR_STEPS.map((_, i) => (
+                 <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === tourStepIndex ? 'w-6 bg-blue-600' : 'w-1.5 bg-slate-200'}`} />
+               ))}
+             </div>
+
+             <div className="text-center mb-6">
+               <h3 className="text-xl font-bold text-slate-900 mb-2">{step.title}</h3>
+               <p className="text-slate-600 leading-relaxed text-sm">{step.content}</p>
+             </div>
+
+             <div className="flex space-x-3">
+               <button 
+                 onClick={handleSkipTour}
+                 className="flex-1 py-2.5 text-slate-500 font-medium hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-colors text-sm"
+               >
+                 Skip Tour
+               </button>
+               <button 
+                 onClick={handleTourNext}
+                 className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all text-sm flex items-center justify-center gap-2"
+               >
+                 {tourStepIndex === TOUR_STEPS.length - 1 ? 'Get Started' : 'Next'} <ChevronRight size={16} />
+               </button>
+             </div>
+             
+             {/* Pointer arrow if not modal */}
+             {!isModal && (
+                <div 
+                  className={`absolute w-4 h-4 bg-white transform rotate-45 border-l border-t border-slate-100 ${
+                    step.position === 'top' ? 'bottom-[-8px] left-1/2 -translate-x-1/2 border-l-0 border-t-0 border-r border-b' :
+                    step.position === 'bottom' ? 'top-[-8px] left-1/2 -translate-x-1/2' :
+                    step.position === 'right' ? 'left-[-8px] top-8' :
+                    'right-[-8px] top-8 border-l-0 border-t-0 border-r border-b' // left
+                  }`} 
+                />
+             )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // --- Render ---
 
   return (
     <div className="min-h-screen flex flex-col font-sans text-slate-900 bg-slate-50">
       
+      {/* Tour Overlay */}
+      {renderTour()}
+
       {/* Top Navigation */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-4 h-16 flex items-center justify-between">
@@ -722,6 +912,7 @@ export default function App() {
               ].map(tab => (
                 <button 
                   key={tab.id}
+                  id={`nav-${tab.id}`}
                   onClick={() => setActiveTab(tab.id as any)}
                   role="tab"
                   aria-selected={activeTab === tab.id}
@@ -737,6 +928,13 @@ export default function App() {
             </nav>
           </div>
           <div className="flex items-center space-x-4">
+             <button 
+               onClick={() => { setTourStepIndex(0); setIsTourActive(true); }}
+               className="p-2 text-slate-500 hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
+               title="Restart Tour"
+             >
+               <HelpCircle size={20} />
+             </button>
              <div className="flex items-center space-x-2 text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
                 <span className="text-slate-500 font-medium">Active Model:</span>
                 <span className="font-mono font-bold text-slate-800">
@@ -767,13 +965,22 @@ export default function App() {
                 <section className="lg:col-span-3 space-y-6">
                 
                 {/* Model Comparison Card */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div id="card-model-comparison" className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
                         <h2 className="font-semibold text-slate-800 flex items-center gap-2 relative z-10">
                             Model Comparison
                         </h2>
                         <div className="flex items-center space-x-2 relative z-10">
+                            <button 
+                                onClick={handleShareComparison}
+                                className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                aria-label="Share comparison view"
+                                title="Share"
+                            >
+                                <Share2 size={16} />
+                            </button>
+                            <div className="h-4 w-[1px] bg-slate-200 mx-1"></div>
                             <span className="text-xs text-slate-500">vs v2.1</span>
                             <span className="text-xs font-bold px-2 py-1 bg-blue-50 text-blue-600 rounded-full border border-blue-100">v3.0</span>
                         </div>
@@ -801,7 +1008,7 @@ export default function App() {
                                     {/* Values */}
                                     <div className="col-span-5 flex items-center space-x-2">
                                         <div className="text-right">
-                                            <p className="text-xs text-slate-400 line-through decoration-slate-300">{item.format(item.base)}</p>
+                                            <p className="text-xs text-slate-500 line-through decoration-slate-300">{item.format(item.base)}</p>
                                         </div>
                                         <ArrowRight size={12} className="text-slate-400 flex-shrink-0" />
                                         <div>
@@ -829,6 +1036,7 @@ export default function App() {
                     <div className="p-4 bg-slate-50 border-t border-slate-100">
                     {phase === AppPhase.IDLE ? (
                         <button 
+                        id="btn-start-release"
                         onClick={handleStartGuided}
                         className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-md shadow-blue-600/20 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white flex items-center justify-center gap-2 group relative overflow-hidden"
                         >
@@ -849,7 +1057,7 @@ export default function App() {
                 {(phase === AppPhase.SHADOW_TEST || phase === AppPhase.CANARY_SETUP) && (
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 animate-fade-in-up ring-1 ring-blue-100">
                         <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                        <Settings size={18} className="text-slate-400" aria-hidden="true" />
+                        <Settings size={18} className="text-slate-500" aria-hidden="true" />
                         Canary Configuration
                         </h3>
                         
@@ -1174,7 +1382,7 @@ export default function App() {
                             value={chatInput}
                             onChange={(e) => setChatInput(e.target.value)}
                             placeholder={isListening ? "Listening..." : "Ask Terra..."}
-                            className="flex-1 bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
+                            className="flex-1 bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-500"
                         />
                         <button 
                             type="submit" 

@@ -36,12 +36,25 @@ const TOUR_STEPS: TourStep[] = [
     targetId: 'nav-overview',
     title: "System Overview",
     content: "We start here. The Overview dashboard monitors global system health, resource usage, and live traffic patterns across all clusters.",
-    position: 'bottom'
+    position: 'bottom',
+    action: () => document.getElementById('nav-overview')?.click()
+  },
+  {
+    targetId: 'card-traffic',
+    title: "Live Traffic",
+    content: "Real-time request volume. Watch this during rollouts to ensure no sudden drops in traffic.",
+    position: 'top'
+  },
+  {
+    targetId: 'card-resources',
+    title: "Cluster Resources",
+    content: "Monitor CPU and Memory usage. High utilization during a rollout might indicate optimization issues in the new model.",
+    position: 'top'
   },
   {
     targetId: 'nav-release',
     title: "Release Console",
-    content: "This is where the magic happens. Let's head over there to manage your deployment pipeline.",
+    content: "This is the command center. Let's head over there to manage your deployment pipeline.",
     position: 'bottom',
     action: () => document.getElementById('nav-release')?.click()
   },
@@ -56,6 +69,20 @@ const TOUR_STEPS: TourStep[] = [
     title: "Initiate Deployment",
     content: "When you're ready, click here to start the agent-guided release flow. Terra will run a shadow test before letting you proceed.",
     position: 'top'
+  },
+  {
+    targetId: 'nav-monitoring',
+    title: "Observability Hub",
+    content: "The Monitoring tab provides deep-dive analytics, log streams, and regional breakdowns for root cause analysis.",
+    position: 'bottom',
+    action: () => document.getElementById('nav-monitoring')?.click()
+  },
+  {
+    targetId: 'nav-logs',
+    title: "Audit Logs",
+    content: "Every action taken by you or the AI agent is recorded here for compliance and post-incident reviews.",
+    position: 'bottom',
+    action: () => document.getElementById('nav-logs')?.click()
   }
 ];
 
@@ -78,7 +105,8 @@ export default function App() {
   const [tourStepIndex, setTourStepIndex] = useState(0);
   const [isTourActive, setIsTourActive] = useState(true);
   const [tourRect, setTourRect] = useState<DOMRect | null>(null);
-  
+  const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+
   // Persistent Settings
   const [networkEnabled, setNetworkEnabled] = useState(() => {
     try {
@@ -161,6 +189,15 @@ export default function App() {
     }
   }, [defaultCanaryPercent, phase]);
 
+  // Window Resize Listener for Tour
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Tour Effect: Update rect when step changes or window resizes
   useEffect(() => {
     if (!isTourActive) return;
@@ -171,6 +208,9 @@ export default function App() {
         const el = document.getElementById(step.targetId);
         if (el) {
           setTourRect(el.getBoundingClientRect());
+        } else {
+            // Element not found (maybe not rendered yet), keep rect null
+            setTourRect(null);
         }
       } else {
         setTourRect(null); // Center modal
@@ -178,14 +218,12 @@ export default function App() {
     };
 
     // Small delay to allow UI to update (e.g. tab switch)
-    const timeout = setTimeout(updateRect, 100);
-    window.addEventListener('resize', updateRect);
+    const timeout = setTimeout(updateRect, 300);
     
     return () => {
       clearTimeout(timeout);
-      window.removeEventListener('resize', updateRect);
     };
-  }, [tourStepIndex, isTourActive, activeTab]);
+  }, [tourStepIndex, isTourActive, activeTab, windowSize]);
 
   // Live Dashboard Simulation Effect
   useEffect(() => {
@@ -301,6 +339,8 @@ export default function App() {
           setTourStepIndex(prev => prev + 1);
         } else {
           setIsTourActive(false);
+          // Return to overview after tour
+          setActiveTab('overview');
         }
       }, 150);
     } else {
@@ -454,7 +494,7 @@ export default function App() {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in pb-10">
             {/* Real-time Traffic Hero Card */}
-            <div className="col-span-1 md:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm relative overflow-hidden group">
+            <div id="card-traffic" className="col-span-1 md:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm relative overflow-hidden group">
                 <div className="p-6 h-full flex flex-col justify-between relative z-10">
                     <div>
                         <div className="flex items-center justify-between mb-2">
@@ -538,7 +578,7 @@ export default function App() {
             </div>
 
              {/* Resources Card */}
-             <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col justify-between">
+             <div id="card-resources" className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col justify-between">
                  <div>
                     <div className="flex justify-between items-start mb-2">
                         <h3 className="text-slate-800 font-bold flex items-center gap-2"><Server size={18} className="text-slate-400"/> Resources</h3>
@@ -998,6 +1038,56 @@ export default function App() {
 
     const step = TOUR_STEPS[tourStepIndex];
     const isModal = !step.targetId;
+    const isMobile = windowSize.width < 768; // Mobile breakpoint
+
+    // Calculate position for desktop only if not modal
+    let desktopStyle: React.CSSProperties = {};
+    if (!isModal && !isMobile && tourRect) {
+        let top = 0;
+        let left = 0;
+        
+        switch (step.position) {
+            case 'top':
+                top = tourRect.top - 200;
+                left = tourRect.left + (tourRect.width / 2) - 160;
+                break;
+            case 'bottom':
+                top = tourRect.bottom + 24;
+                left = tourRect.left + (tourRect.width / 2) - 160;
+                break;
+            case 'right':
+                top = tourRect.top;
+                left = tourRect.right + 24;
+                break;
+            case 'left':
+                top = tourRect.top;
+                left = tourRect.left - 340;
+                break;
+            default:
+                top = tourRect.top + 24;
+                left = tourRect.left + (tourRect.width / 2) - 160;
+        }
+
+        // Boundary checks
+        if (left < 16) left = 16;
+        if (left + 320 > windowSize.width) left = windowSize.width - 336;
+        if (top < 16) top = 16;
+        if (top + 150 > windowSize.height) top = windowSize.height - 220;
+
+        desktopStyle = { top, left };
+    }
+
+    const mobileStyle: React.CSSProperties = {
+        position: 'fixed',
+        bottom: '24px',
+        left: '16px',
+        right: '16px',
+        top: 'auto',
+        transform: 'none',
+        zIndex: 101,
+        margin: '0 auto',
+        maxWidth: '400px'
+    };
 
     return (
       <div className="fixed inset-0 z-[100] overflow-hidden pointer-events-none">
@@ -1020,14 +1110,7 @@ export default function App() {
         {/* Tooltip Card */}
         <div 
           className={`absolute pointer-events-auto flex flex-col items-center justify-center transition-all duration-300 ${isModal ? 'inset-0' : ''}`}
-          style={!isModal && tourRect ? {
-            top: step.position === 'top' ? tourRect.top - 200 : 
-                 step.position === 'bottom' ? tourRect.bottom + 24 :
-                 tourRect.top + 24, // Fallback vertically
-            left: step.position === 'right' ? tourRect.right + 24 : 
-                  step.position === 'left' ? tourRect.left - 340 : 
-                  tourRect.left + (tourRect.width / 2) - 160,
-          } : {}}
+          style={isMobile && !isModal ? mobileStyle : (!isModal && tourRect ? desktopStyle : {})}
         >
           <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full animate-scale-in border border-slate-100 relative">
              {/* Progress Dots */}
@@ -1057,8 +1140,8 @@ export default function App() {
                </button>
              </div>
              
-             {/* Pointer arrow if not modal */}
-             {!isModal && (
+             {/* Pointer arrow if not modal and not mobile */}
+             {!isModal && !isMobile && (
                 <div 
                   className={`absolute w-4 h-4 bg-white transform rotate-45 border-l border-t border-slate-100 ${
                     step.position === 'top' ? 'bottom-[-8px] left-1/2 -translate-x-1/2 border-l-0 border-t-0 border-r border-b' :
@@ -1154,6 +1237,7 @@ export default function App() {
               ].map(tab => (
                 <button 
                   key={tab.id}
+                  id={`nav-mobile-${tab.id}`}
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5
                     ${activeTab === tab.id 

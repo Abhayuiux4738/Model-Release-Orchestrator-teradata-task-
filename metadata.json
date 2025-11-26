@@ -1,5 +1,5 @@
 {
-  "name": "Copy of Model Release Orchestrator",
+  "name": "Model Release Orchestrator",
   "description": "A high-fidelity prototype for guided canary releases with AI agent assistance.",
   "requestFramePermissions": []
 }

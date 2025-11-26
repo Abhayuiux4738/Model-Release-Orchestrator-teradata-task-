@@ -1,0 +1,27 @@
+{
+  "agent_name": "Terra",
+  "role": "Release Orchestration Agent",
+  "anomaly_detection_logic": {
+    "triggers": [
+      { "metric": "latency", "condition": "increase > 15%", "threshold_value": 241 },
+      { "metric": "feature_drift", "condition": "kl_divergence > 0.10", "threshold_value": 0.10 },
+      { "metric": "error_rate", "condition": "absolute_increase > 1%", "threshold_value": 0.018 }
+    ],
+    "logic": "OR"
+  },
+  "confidence_scoring": {
+    "formula": "weighted_sum",
+    "weights": {
+      "latency": 0.4,
+      "drift": 0.4,
+      "error_rate": 0.2
+    },
+    "output_score": 83,
+    "risk_level": "High"
+  },
+  "behavior": {
+    "auto_rollback": false,
+    "requires_confirmation": true,
+    "timeout_seconds": 60
+  }
+}

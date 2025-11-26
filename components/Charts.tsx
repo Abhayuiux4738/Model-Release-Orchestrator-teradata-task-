@@ -19,7 +19,7 @@ const CustomTooltip = ({ active, payload, label, unit }: any) => {
       <div className="bg-white/95 backdrop-blur-md border border-slate-200 p-3 rounded-lg shadow-xl animate-fade-in ring-1 ring-slate-900/5 transform transition-all duration-200">
         <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">{label}</p>
         <div className="flex items-baseline gap-1">
-          <span className="text-slate-900 font-bold font-mono text-lg" style={{ color: payload[0].stroke }}>
+          <span className="text-slate-900 font-bold font-mono text-lg" style={{ color: payload[0].stroke || payload[0].fill }}>
             {payload[0].value}
           </span>
           <span className="text-slate-500 text-xs font-medium">{unit}</span>

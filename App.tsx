@@ -4,11 +4,12 @@ import {
   Wifi, WifiOff, Check, X, ChevronRight, BarChart2, List, Shield, Info,
   Bot, ShieldAlert, Zap, Search, ArrowRight, GitBranch, Clock, BrainCircuit,
   LayoutDashboard, Terminal, LineChart, Cpu, Server, TrendingUp, Calendar, Layers,
-  Globe, Radio, Mic, Send, User as UserIcon, HelpCircle, Share2
+  Globe, Radio, Mic, Send, User as UserIcon, HelpCircle, Share2, MapPin, Database,
+  AlertTriangle, Code
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer, Cell,
-  AreaChart, Area, CartesianGrid
+  AreaChart, Area, CartesianGrid, PieChart, Pie, Legend
 } from 'recharts';
 
 import { AppPhase, MetricPoint, LogEntry, AgentMessage, ModelData } from './types';
@@ -369,7 +370,8 @@ export default function App() {
 
   const handleStartCanary = () => {
     setPhase(AppPhase.MONITORING);
-    setActiveTab('monitoring'); // Auto switch to monitoring view
+    // REMOVED: Auto-redirect to monitoring tab. User stays on Release Console.
+    // setActiveTab('monitoring'); 
     setActiveModel(`${BASELINE_MODEL.version} (95%) / ${CANDIDATE_MODEL.version} (5%)`);
     addLog('Canary Rollout Started', `Traffic split: 95/5. Monitoring started.`);
     startSimulation();
@@ -454,17 +456,20 @@ export default function App() {
             {/* Real-time Traffic Hero Card */}
             <div className="col-span-1 md:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm relative overflow-hidden group">
                 <div className="p-6 h-full flex flex-col justify-between relative z-10">
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                            <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
-                                <Activity size={20} />
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                                <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+                                    <Activity size={20} />
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-800">Global Traffic</h3>
                             </div>
-                            <h3 className="text-lg font-bold text-slate-800">Global Traffic</h3>
+                            <div className="flex items-center space-x-2 bg-green-50 px-3 py-1 rounded-full border border-green-100">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                <span className="text-xs font-bold text-green-700">LIVE</span>
+                            </div>
                         </div>
-                        <div className="flex items-center space-x-2 bg-green-50 px-3 py-1 rounded-full border border-green-100">
-                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                            <span className="text-xs font-bold text-green-700">LIVE</span>
-                        </div>
+                        <p className="text-xs text-slate-500 mb-4">Real-time incoming request volume across all zones.</p>
                     </div>
                     
                     <div className="flex items-end space-x-3 mb-6">
@@ -503,9 +508,12 @@ export default function App() {
 
             {/* System Health Stats */}
             <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-4">
-                     <h3 className="font-bold text-slate-800 flex items-center gap-2"><Globe size={18} className="text-slate-400"/> Health</h3>
-                     <Check size={16} className="text-green-500" />
+                <div>
+                    <div className="flex items-center justify-between mb-2">
+                         <h3 className="font-bold text-slate-800 flex items-center gap-2"><Globe size={18} className="text-slate-400"/> Health</h3>
+                         <Check size={16} className="text-green-500" />
+                    </div>
+                    <p className="text-xs text-slate-500 mb-4">Aggregate system stability and error metrics.</p>
                 </div>
                 <div className="space-y-6">
                     <div>
@@ -531,9 +539,12 @@ export default function App() {
 
              {/* Resources Card */}
              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col justify-between">
-                 <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-slate-800 font-bold flex items-center gap-2"><Server size={18} className="text-slate-400"/> Resources</h3>
-                    <div className="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded border border-green-200 uppercase tracking-wide">Optimal</div>
+                 <div>
+                    <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-slate-800 font-bold flex items-center gap-2"><Server size={18} className="text-slate-400"/> Resources</h3>
+                        <div className="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded border border-green-200 uppercase tracking-wide">Optimal</div>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-4">Compute infrastructure utilization.</p>
                  </div>
                  <div className="space-y-4">
                      <div>
@@ -568,6 +579,7 @@ export default function App() {
                     </div>
                     <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Production Model</p>
                     <h3 className="text-2xl font-bold text-slate-800 mt-1">Classification_v2</h3>
+                    <p className="text-xs text-slate-500 mt-2">Current production model version and traffic split.</p>
                 </div>
                 <div className="mt-4">
                     <div className="flex justify-between text-xs text-slate-500 mb-2">
@@ -585,7 +597,7 @@ export default function App() {
 
              {/* Deployment Velocity Chart */}
              <div className="col-span-1 md:col-span-2 lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-1">
                     <div>
                         <h3 className="text-slate-800 font-bold flex items-center gap-2"><TrendingUp size={18} className="text-blue-500"/> Release Velocity</h3>
                     </div>
@@ -600,6 +612,7 @@ export default function App() {
                          </div>
                     </div>
                 </div>
+                <p className="text-xs text-slate-500 mb-6">Deployment frequency and success rate over the last 7 days.</p>
                 <div className="h-40 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={WEEKLY_DATA} barSize={24}>
@@ -618,7 +631,8 @@ export default function App() {
 
             {/* Quick Actions / Recent Activity */}
              <div className="col-span-1 md:col-span-1 lg:col-span-1 bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col">
-                <h3 className="text-slate-800 font-bold mb-4 flex items-center gap-2"><Clock size={18} className="text-slate-400"/> Recent Activity</h3>
+                <h3 className="text-slate-800 font-bold mb-1 flex items-center gap-2"><Clock size={18} className="text-slate-400"/> Recent Activity</h3>
+                <p className="text-xs text-slate-500 mb-4">Latest audit log events and actions.</p>
                 <div className="flex-1 space-y-4">
                     <div className="flex gap-3">
                         <div className="mt-1 relative">
@@ -658,9 +672,185 @@ export default function App() {
     );
   };
 
+  const renderMonitoringDashboard = () => {
+    // Determine data based on phase for visual effect
+    const isAnomaly = phase === AppPhase.ANOMALY_DETECTED || phase === AppPhase.ROLLED_BACK;
+    
+    // REGIONAL DATA
+    const REGIONAL_DATA = [
+      { name: 'US-East', value: 45, fill: '#22c55e' },
+      { name: 'US-West', value: 52, fill: '#22c55e' },
+      { name: 'EU-West', value: isAnomaly ? 245 : 65, fill: isAnomaly ? '#ef4444' : '#22c55e' },
+      { name: 'Asia-Pac', value: 98, fill: '#eab308' },
+    ];
+
+    // ENDPOINT PERFORMANCE
+    const ENDPOINT_DATA = [
+      { path: '/v1/models:predict', method: 'POST', p95: isAnomaly ? 312 : 120, status: isAnomaly ? 'Degraded' : 'Healthy' },
+      { path: '/v1/models:metadata', method: 'GET', p95: 45, status: 'Healthy' },
+      { path: '/health', method: 'GET', p95: 12, status: 'Healthy' },
+      { path: '/metrics', method: 'GET', p95: 28, status: 'Healthy' },
+    ];
+
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+             <div>
+                <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <Activity className="text-blue-600" size={24} /> Observability Hub
+                </h2>
+                <p className="text-slate-500 text-sm">Deep-dive telemetry and root cause analysis.</p>
+             </div>
+             
+             {/* Contextual Actions in Header */}
+             {isAnomaly && (
+                <div className="flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-lg border border-red-100 animate-pulse">
+                    <AlertTriangle size={18} />
+                    <span className="font-bold text-sm">Critical Anomaly Detected</span>
+                </div>
+             )}
+        </div>
+
+        {/* Top Row: KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <p className="text-xs font-bold text-slate-500 uppercase">Global Latency (P99)</p>
+                <div className="flex items-end gap-2 mt-2">
+                    <span className={`text-3xl font-mono font-bold ${isAnomaly ? 'text-red-600' : 'text-slate-800'}`}>
+                        {isAnomaly ? '256' : '142'}
+                    </span>
+                    <span className="text-sm text-slate-500 mb-1">ms</span>
+                </div>
+             </div>
+             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <p className="text-xs font-bold text-slate-500 uppercase">Error Rate (5xx)</p>
+                <div className="flex items-end gap-2 mt-2">
+                    <span className={`text-3xl font-mono font-bold ${isAnomaly ? 'text-red-600' : 'text-slate-800'}`}>
+                        {isAnomaly ? '1.92' : '0.04'}
+                    </span>
+                    <span className="text-sm text-slate-500 mb-1">%</span>
+                </div>
+             </div>
+             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <p className="text-xs font-bold text-slate-500 uppercase">Active Canaries</p>
+                <div className="flex items-end gap-2 mt-2">
+                    <span className="text-3xl font-mono font-bold text-slate-800">
+                        12
+                    </span>
+                    <span className="text-sm text-slate-500 mb-1">pods</span>
+                </div>
+             </div>
+        </div>
+
+        {/* Decision Box (if needed) */}
+        {phase === AppPhase.ANOMALY_DETECTED && renderDecisionBox()}
+
+        {/* Middle Row: Geo Map & API Breakdown */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Regional Performance */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                        <MapPin size={18} className="text-slate-400" /> Regional Latency
+                    </h3>
+                </div>
+                <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={REGIONAL_DATA} layout="vertical" margin={{ left: 20 }}>
+                            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
+                            <XAxis type="number" hide />
+                            <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+                            <ReTooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '8px' }} />
+                            <Bar dataKey="value" barSize={20} radius={[0, 4, 4, 0]}>
+                                {REGIONAL_DATA.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+
+            {/* API Endpoint Health */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <div className="p-6 border-b border-slate-100">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                        <Code size={18} className="text-slate-400" /> API Endpoint Health
+                    </h3>
+                </div>
+                <div className="flex-1 overflow-auto">
+                    <table className="w-full text-sm text-left">
+                        <thead className="bg-slate-50 text-slate-500">
+                            <tr>
+                                <th className="px-6 py-3 font-medium">Route</th>
+                                <th className="px-6 py-3 font-medium">Method</th>
+                                <th className="px-6 py-3 font-medium">Latency</th>
+                                <th className="px-6 py-3 font-medium">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {ENDPOINT_DATA.map((ep, i) => (
+                                <tr key={i} className="hover:bg-slate-50">
+                                    <td className="px-6 py-3 font-mono text-xs text-slate-600">{ep.path}</td>
+                                    <td className="px-6 py-3">
+                                        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs font-bold">{ep.method}</span>
+                                    </td>
+                                    <td className="px-6 py-3 font-mono">
+                                        <span className={ep.p95 > 200 ? 'text-red-600 font-bold' : 'text-slate-700'}>{ep.p95}ms</span>
+                                    </td>
+                                    <td className="px-6 py-3">
+                                        <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium border
+                                            ${ep.status === 'Degraded' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'}
+                                        `}>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${ep.status === 'Degraded' ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                                            {ep.status}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {/* Bottom Row: Live Logs Terminal */}
+        <div className="bg-slate-900 rounded-xl shadow-lg border border-slate-800 overflow-hidden flex flex-col h-64">
+            <div className="bg-slate-950 px-4 py-2 border-b border-slate-800 flex justify-between items-center">
+                <h3 className="text-slate-400 text-xs font-mono flex items-center gap-2">
+                    <Terminal size={14} /> LIVE LOG STREAM (pod-canary-xy9z)
+                </h3>
+                <div className="flex gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
+                </div>
+            </div>
+            <div className="p-4 font-mono text-xs text-slate-300 overflow-y-auto space-y-1">
+                <div className="opacity-50">[INFO] 2024-05-21 10:42:01 Initializing model weights...</div>
+                <div className="opacity-50">[INFO] 2024-05-21 10:42:02 Worker pool started (4 threads)</div>
+                <div>[INFO] 2024-05-21 10:42:05 Request received: POST /v1/models:predict</div>
+                <div>[INFO] 2024-05-21 10:42:05 Processing payload (size: 24kb)</div>
+                {isAnomaly && (
+                    <>
+                        <div className="text-red-400">[WARN] 2024-05-21 10:42:06 Slow database query detected (182ms)</div>
+                        <div className="text-red-400">[ERROR] 2024-05-21 10:42:06 Timeout waiting for region: eu-west-1</div>
+                        <div className="text-red-400">[ERROR] 2024-05-21 10:42:07 Client disconnected prematurely</div>
+                    </>
+                )}
+                {!isAnomaly && (
+                    <div className="text-green-400">[INFO] 2024-05-21 10:42:06 Request completed (45ms)</div>
+                )}
+                <div className="animate-pulse">_</div>
+            </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderSettings = () => (
      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm animate-fade-in max-w-2xl">
-         <h3 className="text-slate-800 font-bold mb-6 flex items-center gap-2"><Settings size={20} /> Configuration</h3>
+         <h3 className="text-slate-800 font-bold mb-1 flex items-center gap-2"><Settings size={20} /> Configuration</h3>
+         <p className="text-xs text-slate-500 mb-6">Manage system toggles and deployment defaults.</p>
          
          <div className="space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -887,7 +1077,7 @@ export default function App() {
   // --- Render ---
 
   return (
-    <div className="min-h-screen flex flex-col font-sans text-slate-900 bg-slate-50">
+    <div className="min-h-screen flex flex-col font-sans text-slate-900 bg-slate-50 overflow-x-hidden">
       
       {/* Tour Overlay */}
       {renderTour()}
@@ -900,8 +1090,10 @@ export default function App() {
               <div className="bg-blue-600 text-white p-1.5 rounded-lg shadow-md shadow-blue-600/20">
                 <Activity size={20} />
               </div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900">Model Release Orchestrator</h1>
+              <h1 className="text-lg md:text-xl font-bold tracking-tight text-slate-900 hidden sm:block">Model Release Orchestrator</h1>
+              <h1 className="text-lg font-bold tracking-tight text-slate-900 sm:hidden">MRO</h1>
             </div>
+            {/* Desktop Nav */}
             <nav className="hidden md:flex space-x-1" role="tablist">
               {[
                 {id: 'overview', label: 'Overview', icon: LayoutDashboard}, 
@@ -935,7 +1127,7 @@ export default function App() {
              >
                <HelpCircle size={20} />
              </button>
-             <div className="flex items-center space-x-2 text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
+             <div className="hidden sm:flex items-center space-x-2 text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
                 <span className="text-slate-500 font-medium">Active Model:</span>
                 <span className="font-mono font-bold text-slate-800">
                   {activeModel}
@@ -949,6 +1141,31 @@ export default function App() {
              ></div>
           </div>
         </div>
+        
+        {/* Mobile Nav - Simple Horizontal Scroll */}
+        <nav className="md:hidden overflow-x-auto whitespace-nowrap px-4 py-2 bg-slate-50 border-t border-slate-100 scrollbar-hide">
+            <div className="flex space-x-2">
+            {[
+                {id: 'overview', label: 'Overview', icon: LayoutDashboard}, 
+                {id: 'release', label: 'Release', icon: Terminal}, 
+                {id: 'monitoring', label: 'Monitoring', icon: LineChart}, 
+                {id: 'logs', label: 'Logs', icon: List}, 
+                {id: 'settings', label: 'Settings', icon: Settings}
+              ].map(tab => (
+                <button 
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5
+                    ${activeTab === tab.id 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-white text-slate-600 border border-slate-200'}`}
+                >
+                  <tab.icon size={14} />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+        </nav>
       </header>
 
       {/* Main Content Grid */}
@@ -958,32 +1175,36 @@ export default function App() {
         {activeTab === 'overview' && <div className="col-span-12">{renderOverview()}</div>}
         {activeTab === 'settings' && <div className="col-span-12">{renderSettings()}</div>}
         
-        {['release', 'monitoring', 'logs'].includes(activeTab) && (
+        {activeTab === 'monitoring' && <div className="col-span-1 lg:col-span-9">{renderMonitoringDashboard()}</div>}
+
+        {['release', 'logs'].includes(activeTab) && (
         <>
             {/* Left Column: Context & Controls - Hidden on pure Monitoring tab to give more space */}
-            {activeTab !== 'monitoring' && (
-                <section className="lg:col-span-3 space-y-6">
+            <section className="col-span-1 lg:col-span-3 space-y-6">
                 
                 {/* Model Comparison Card */}
                 <div id="card-model-comparison" className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                        <h2 className="font-semibold text-slate-800 flex items-center gap-2 relative z-10">
-                            Model Comparison
-                        </h2>
-                        <div className="flex items-center space-x-2 relative z-10">
-                            <button 
-                                onClick={handleShareComparison}
-                                className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                aria-label="Share comparison view"
-                                title="Share"
-                            >
-                                <Share2 size={16} />
-                            </button>
-                            <div className="h-4 w-[1px] bg-slate-200 mx-1"></div>
-                            <span className="text-xs text-slate-500">vs v2.1</span>
-                            <span className="text-xs font-bold px-2 py-1 bg-blue-50 text-blue-600 rounded-full border border-blue-100">v3.0</span>
+                    <div className="p-4 border-b border-slate-100 bg-slate-50/50 relative overflow-hidden">
+                        <div className="flex justify-between items-center relative z-10">
+                            <h2 className="font-semibold text-slate-800 flex items-center gap-2">
+                                Model Comparison
+                            </h2>
+                            <div className="flex items-center space-x-2">
+                                <button 
+                                    onClick={handleShareComparison}
+                                    className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    aria-label="Share comparison view"
+                                    title="Share"
+                                >
+                                    <Share2 size={16} />
+                                </button>
+                                <div className="h-4 w-[1px] bg-slate-200 mx-1"></div>
+                                <span className="text-xs text-slate-500">vs v2.1</span>
+                                <span className="text-xs font-bold px-2 py-1 bg-blue-50 text-blue-600 rounded-full border border-blue-100">v3.0</span>
+                            </div>
                         </div>
+                        <p className="text-xs text-slate-500 mt-1 relative z-10">Key performance indicators vs. baseline.</p>
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
                     </div>
                     
                     <div className="divide-y divide-slate-100">
@@ -1056,10 +1277,13 @@ export default function App() {
                 {/* Guided Flow Controls */}
                 {(phase === AppPhase.SHADOW_TEST || phase === AppPhase.CANARY_SETUP) && (
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 animate-fade-in-up ring-1 ring-blue-100">
-                        <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                        <Settings size={18} className="text-slate-500" aria-hidden="true" />
-                        Canary Configuration
-                        </h3>
+                        <div>
+                            <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                                <Settings size={18} className="text-slate-500" aria-hidden="true" />
+                                Canary Configuration
+                            </h3>
+                            <p className="text-xs text-slate-500 mt-1 mb-4">Rollout parameters and safety thresholds.</p>
+                        </div>
                         
                         {phase === AppPhase.SHADOW_TEST && (
                         <div className="flex flex-col items-center justify-center py-6 space-y-4" role="status" aria-busy="true">
@@ -1177,16 +1401,18 @@ export default function App() {
                     </div>
                 )}
 
-                </section>
-            )}
+            </section>
 
-            {/* Middle Column: Monitoring Dashboard - Expands on Monitoring tab */}
-            <section className={`${activeTab === 'monitoring' ? 'lg:col-span-9' : 'lg:col-span-6'} space-y-6`}>
+            {/* Middle Column: Release Console - Expands on Monitoring tab */}
+            <section className="col-span-1 lg:col-span-6 space-y-6">
             
             {activeTab === 'logs' ? (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 min-h-[500px] flex flex-col">
-                    <div className="p-4 border-b border-slate-200 font-semibold text-slate-800 flex items-center space-x-2 bg-slate-50/50">
-                    <List size={18} className="text-slate-500" /> <span>Audit Logs</span>
+                    <div className="p-4 border-b border-slate-200 font-semibold text-slate-800 bg-slate-50/50">
+                        <div className="flex items-center space-x-2">
+                             <List size={18} className="text-slate-500" /> <span>Audit Logs</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1 font-normal">Immutable record of all system events and user actions.</p>
                     </div>
                     <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
@@ -1221,30 +1447,17 @@ export default function App() {
                 </div>
             ) : (
                 <>
-                {/* Empty State for Monitoring Tab if IDLE */}
-                {activeTab === 'monitoring' && phase === AppPhase.IDLE ? (
-                    <div className="flex flex-col items-center justify-center h-[500px] bg-white border border-slate-200 rounded-xl p-8 text-center animate-fade-in shadow-sm">
-                        <div className="bg-slate-50 p-6 rounded-full mb-6">
-                            <LineChart size={48} className="text-slate-400" />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-800 mb-2">No Active Monitoring Session</h3>
-                        <p className="text-slate-500 max-w-md mb-8">
-                            Start a guided canary release to begin streaming real-time metrics and anomalies.
-                        </p>
-                        <button 
-                             onClick={() => { setActiveTab('release'); handleStartGuided(); }}
-                             className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg shadow-md flex items-center gap-2 transition-colors"
-                        >
-                            <Play size={18} /> Start New Release
-                        </button>
-                    </div>
-                ) : (
-                    <>
+                {/* Empty State for Release Tab if IDLE (Wait, Release Tab shows charts always? No, charts are for monitoring phase) */}
+                {/* The Requirement says Release Console needs Charts too. So we keep them. */}
+                
                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
-                        <BarChart2 className="text-blue-600" size={20} aria-hidden="true" />
-                        <span>Live Monitoring</span>
-                        </h2>
+                        <div>
+                            <h2 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
+                                <BarChart2 className="text-blue-600" size={20} aria-hidden="true" />
+                                <span>Canary Metrics</span>
+                            </h2>
+                            <p className="text-xs text-slate-500 mt-1">Real-time telemetry from active canary nodes.</p>
+                        </div>
                         <div className="flex items-center space-x-2">
                             {!networkEnabled && (
                             <span className="flex items-center space-x-1 text-red-600 text-xs font-bold px-3 py-1 bg-red-50 rounded-full border border-red-100 animate-pulse" role="status">
@@ -1261,9 +1474,6 @@ export default function App() {
                             </button>
                         </div>
                     </div>
-
-                    {/* Show Decision Box in Middle Column if in Monitoring Tab and Anomaly Active */}
-                    {activeTab === 'monitoring' && phase === AppPhase.ANOMALY_DETECTED && renderDecisionBox()}
                     
                     {/* Metrics Grid */}
                     <div className="space-y-4">
@@ -1354,49 +1564,49 @@ export default function App() {
                             style={{ width: `${Math.min(100, (metrics.length / 30) * 100)}%` }}
                         ></div>
                     </div>
-                    </>
-                )}
                 </>
             )}
 
             </section>
-
-            {/* Right Column: Agent Panel (Sticky) */}
-             <aside className="lg:col-span-3 lg:h-[calc(100vh-100px)] lg:sticky lg:top-24">
-            <div className="h-[600px] lg:h-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col ring-1 ring-slate-100">
-                <TerraPanel messages={messages} />
-                
-                {/* Agent Input Area */}
-                <div className="p-3 bg-white border-t border-slate-200">
-                    <form onSubmit={handleChatSubmit} className="relative flex items-center gap-2">
-                        <button 
-                            type="button" 
-                            onClick={toggleListening}
-                            className={`p-2 rounded-full transition-colors ${isListening ? 'text-red-600 bg-red-50 hover:bg-red-100 animate-pulse' : 'text-slate-400 hover:text-blue-600 hover:bg-slate-100'}`}
-                            aria-label="Toggle voice input"
-                        >
-                            <Mic size={20} />
-                        </button>
-                        <input 
-                            type="text" 
-                            value={chatInput}
-                            onChange={(e) => setChatInput(e.target.value)}
-                            placeholder={isListening ? "Listening..." : "Ask Terra..."}
-                            className="flex-1 bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-500"
-                        />
-                        <button 
-                            type="submit" 
-                            disabled={!chatInput.trim()} 
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            aria-label="Send message"
-                        >
-                            <Send size={20} />
-                        </button>
-                    </form>
-                </div>
-            </div>
-            </aside>
         </>
+        )}
+
+        {/* Right Column: Agent Panel (Sticky on Desktop, Stacked on Mobile) */}
+        {['release', 'monitoring', 'logs'].includes(activeTab) && (
+             <aside className="col-span-1 lg:col-span-3 lg:sticky lg:top-24 h-[600px] lg:h-[calc(100vh-120px)]">
+                <div className="h-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col ring-1 ring-slate-100">
+                    <TerraPanel messages={messages} />
+                    
+                    {/* Agent Input Area */}
+                    <div className="p-3 bg-white border-t border-slate-200">
+                        <form onSubmit={handleChatSubmit} className="relative flex items-center gap-2">
+                            <button 
+                                type="button" 
+                                onClick={toggleListening}
+                                className={`p-2 rounded-full transition-colors ${isListening ? 'text-red-600 bg-red-50 hover:bg-red-100 animate-pulse' : 'text-slate-400 hover:text-blue-600 hover:bg-slate-100'}`}
+                                aria-label="Toggle voice input"
+                            >
+                                <Mic size={20} />
+                            </button>
+                            <input 
+                                type="text" 
+                                value={chatInput}
+                                onChange={(e) => setChatInput(e.target.value)}
+                                placeholder={isListening ? "Listening..." : "Ask Terra..."}
+                                className="flex-1 bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-500"
+                            />
+                            <button 
+                                type="submit" 
+                                disabled={!chatInput.trim()} 
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                aria-label="Send message"
+                            >
+                                <Send size={20} />
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </aside>
         )}
 
       </main>
